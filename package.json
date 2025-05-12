@@ -1,0 +1,35 @@
+{
+  "name": "discogswantedsorter",
+  "version": "1.0.0",
+  "description": "Discogs collection analyzer to sort by most wanted items",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "discogs",
+    "vinyl",
+    "records",
+    "collection",
+    "music",
+    "api",
+    "cd",
+    "sorter"
+  ],
+  "author": "",
+  "type": "commonjs",
+  "dependencies": {
+    "axios": "^1.9.0",
+    "ejs": "^3.1.10",
+    "express": "^5.1.0",
+    "socket.io": "^4.7.4"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

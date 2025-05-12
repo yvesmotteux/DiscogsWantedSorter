@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <%- include('partials/header') %>
+</head>
+<body <%= typeof loadingState !== 'undefined' && loadingState === 'loading' ? 'data-loading="true"' : '' %>>
+    <div class="container">
+        <h1>Discogs Wanted Sorter</h1>
+        <p style="text-align: center;">View your Discogs collection sorted by most wanted records.</p>
+        
+        <%- include('partials/token-section') %>
+        
+        <div class="search-form">
+            <form action="/search" method="POST">
+                <input type="text" name="username" placeholder="Discogs Username" value="<%= username %>" required>
+                <% if (apiTokenStatus !== 'active') { %>
+                <input type="text" name="apiToken" placeholder="Discogs API Token" style="margin-top: 10px; width: 300px;">
+                <% } %>
+                <button type="submit">Search Collection</button>
+            </form>
+        </div>
+        
+        <% if (typeof error !== 'undefined' && error) { %>
+            <div class="error">
+                <%= error %>
+            </div>
+        <% } %>
+        
+        <!-- Progress indicators -->
+        <%- include('partials/progress-indicators') %>
+        
+        <!-- Results container -->
+        <%- include('partials/results-table') %>
+        
+        <div id="no-results" style="text-align: center; display: none;">
+            <p>No records found for this user or collection is not public.</p>
+        </div>
+    </div>
+
+    <!-- Include the client-side JavaScript -->
+    <script src="/js/collection.js"></script>
+</body>
+</html>

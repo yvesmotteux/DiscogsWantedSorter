@@ -1,0 +1,24 @@
+<!-- API Token Section Partial -->
+<div class="api-token-section">
+    <h3>
+        Discogs API Token 
+        <span class="token-status <%= apiTokenStatus === 'active' ? 'active' : 'inactive' %>">
+            <%= apiTokenStatus === 'active' ? 'Token Active' : 'No Token' %>
+        </span>
+        <span class="required-badge">Required</span>
+    </h3>
+    
+    <div class="api-instructions">
+        <p>To use this application, you need a Discogs API token:</p>
+        <ol>
+            <li>Create a <a href="https://www.discogs.com/users/create" target="_blank">Discogs account</a> if you don't have one</li>
+            <li>Go to <a href="https://www.discogs.com/settings/developers" target="_blank">Discogs Developer Settings</a></li>
+            <li>Generate a personal access token</li>
+            <li>Enter it below:</li>
+        </ol>
+        <form action="/set-token" method="POST" style="margin: 15px 0;">
+            <input type="text" name="apiToken" placeholder="Paste your Discogs API token here" style="width: 70%; padding: 8px;">
+            <button type="submit" style="padding: 8px 15px;">Save Token</button>
+        </form>
+    </div>
+</div>

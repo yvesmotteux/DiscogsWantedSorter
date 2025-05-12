@@ -1,0 +1,8 @@
+# Dependencies
+node_modules/
+
+# Editor directories and files
+.idea
+.vscode
+*.swp
+*.swo

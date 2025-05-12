@@ -1,0 +1,243 @@
+/* Main styles for Discogs Wanted Sorter */
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+    color: #333;
+}
+h1, h2 {
+    color: #333;
+    text-align: center;
+}
+.container {
+    max-width: 95%; /* Increased from 1200px to use more screen space */
+    margin: 0 auto;
+    padding: 15px; /* Reduced padding */
+    background-color: white;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.search-form {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.search-form input[type="text"] {
+    padding: 10px;
+    width: 300px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+.search-form button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.search-form button:hover {
+    background-color: #45a049;
+}
+.loading {
+    text-align: center;
+    display: none;
+}
+.error {
+    color: red;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Improved Table styles */
+.records-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    font-size: 1.15em; /* Increased font size for better readability */
+    table-layout: fixed; /* Fixed layout for strict column control */
+    border-spacing: 0;
+    font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, Arial, sans-serif; /* Improved font stack */
+    letter-spacing: 0.01em; /* Slightly improved letter spacing for better readability */
+}
+.records-table th {
+    background-color: #f2f2f2;
+    padding: 10px 5px;
+    text-align: center;
+    border-bottom: 2px solid #ddd;
+    position: sticky;
+    top: 0;
+    z-index: 10; /* Increased z-index to ensure headers appear above content */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-weight: 600; /* Semi-bold instead of bold for better readability */
+    color: #333; /* Darker font color for better contrast */
+    box-shadow: 0 2px 2px -1px rgba(0,0,0,0.1); /* Add subtle shadow for better separation */
+}
+.records-table td {
+    padding: 8px 5px;
+    border-bottom: 1px solid #eee;
+    vertical-align: middle;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    line-height: 1.1; /* Compact line height to maintain row height while using larger font */
+}
+.records-table tr:hover {
+    background-color: #f5f5f5;
+}
+.records-table img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto; /* Centers the image */
+}
+.table-container {
+    margin-top: 20px;
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    /* Remove the max-height and overflow-y to eliminate the second scrollbar */
+}
+
+/* Column width specifications with more precise control */
+.index-col { width: 40px; text-align: center; }
+.cover-cell { width: 70px; text-align: center; }
+.artist-col { width: 15%; text-align: left; }
+.title-col { width: 25%; text-align: left; }
+.format-col { width: 8%; text-align: center; }
+.have-col { width: 70px; text-align: center; } /* Changed from right to center */
+.want-col { width: 70px; text-align: center; } /* Changed from right to center */
+.price-col { width: 10%; text-align: center; } /* Changed from right to center */
+.date-col { width: 10%; text-align: center; }
+
+.numeric-cell {
+    text-align: center; /* Changed from right to center for better alignment */
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif; /* Removed monospace for better appearance */
+    font-size: 1.05em; /* Match table font size */
+    padding: 0 5px; /* Reduce padding to prevent wrapping */
+    font-weight: 500; /* Slightly bolder for better readability */
+}
+
+/* Tooltip */
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* API token section */
+.api-token-section {
+    margin: 20px auto;
+    max-width: 600px;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+.token-status {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 3px;
+    font-size: 0.8em;
+    margin-left: 10px;
+}
+.token-status.active {
+    background-color: #d4edda;
+    color: #155724;
+}
+.token-status.inactive {
+    background-color: #f8d7da;
+    color: #721c24;
+}
+.api-instructions {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 15px;
+    margin-top: 15px;
+}
+.required-badge {
+    display: inline-block;
+    background-color: #dc3545;
+    color: white;
+    font-size: 0.7em;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Sort indicators */
+.sortable {
+    cursor: pointer;
+}
+.sortable::after {
+    content: "⇅";
+    display: inline-block;
+    margin-left: 5px;
+    font-size: 0.8em;
+}
+.sort-asc::after {
+    content: "↑";
+}
+.sort-desc::after {
+    content: "↓";
+}
+
+/* Progress bar styles */
+.progress-container {
+    margin: 30px auto;
+    max-width: 800px;
+    display: none;
+}
+.progress-bar {
+    height: 20px;
+    background-color: #e0e0e0;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    overflow: hidden;
+    position: relative;
+}
+.progress-bar-inner {
+    height: 100%;
+    background-color: #4CAF50;
+    width: 0%;
+    transition: width 0.3s ease;
+    border-radius: 10px;
+}
+.progress-text {
+    text-align: center;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+.progress-status {
+    text-align: center;
+    font-size: 0.9em;
+    color: #666;
+}
+.results-container {
+    display: none;
+}
