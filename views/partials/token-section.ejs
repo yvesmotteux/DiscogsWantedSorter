@@ -21,4 +21,16 @@
             <button type="submit" style="padding: 8px 15px;">Save Token</button>
         </form>
     </div>
+
+    <!-- Debug Logging Section -->
+    <div class="debug-section" style="margin-top: 25px; padding-top: 15px; border-top: 1px solid #ddd;">
+        <h4 style="margin-bottom: 10px;">Debug Mode</h4>
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input type="checkbox" id="debugToggle" />
+            <span>Enable debug logging (writes detailed logs to file)</span>
+        </label>
+        <div id="debugStatus" style="margin-top: 10px; padding: 8px; background: #f0f0f0; border-radius: 4px; font-size: 0.9em; display: none;">
+            <span id="debugStatusText"></span>
+        </div>
+    </div>
 </div>

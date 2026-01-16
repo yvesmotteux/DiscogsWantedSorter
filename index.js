@@ -4,6 +4,7 @@ const config = require('./api/config');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
+const logger = require('./utils/logger');
 
 const app = express();
 const server = http.createServer(app);
@@ -12,26 +13,36 @@ const PORT = process.env.PORT || 7341;
 
 let localTokenCopy = process.env.DISCOGS_TOKEN || '';
 if (localTokenCopy) {
-  console.log('Discogs API token found and active.');
+  logger.log('Discogs API token found and active.');
   discogsClient.setDiscogsToken(localTokenCopy);
 } else {
-  console.log('No Discogs API token found. A token is required to use this application.');
-  console.log('You can set your Discogs API token in the DISCOGS_TOKEN environment variable or in the app UI.');
+  logger.log('No Discogs API token found. A token is required to use this application.');
+  logger.log('You can set your Discogs API token in the DISCOGS_TOKEN environment variable or in the app UI.');
 }
 
 io.on('connection', (socket) => {
-  console.log('Client connected for progress updates');
-  
+  logger.log('Client connected for progress updates');
+
   socket.on('disconnect', () => {
-    console.log('Client disconnected');
+    logger.log('Client disconnected');
+  });
+
+  socket.on('toggleDebug', (enabled) => {
+    if (enabled) {
+      logger.enableDebugMode();
+      socket.emit('debugStatus', { enabled: true, logFile: logger.getLogFilePath() });
+    } else {
+      logger.disableDebugMode();
+      socket.emit('debugStatus', { enabled: false });
+    }
   });
 });
 
 discogsClient.onProgress((progressData) => {
   io.emit('progress', progressData);
-  
+
   if (progressData.type === 'collection' || progressData.type === 'enhancement') {
-    console.log(`Progress - ${progressData.message} ${progressData.current}/${progressData.total}`);
+    logger.log(`Progress - ${progressData.message} ${progressData.current}/${progressData.total}`);
   }
 });
 
@@ -70,7 +81,7 @@ app.post('/search', async (req, res) => {
   if (apiToken && apiToken !== localTokenCopy) {
     localTokenCopy = apiToken;
     discogsClient.setDiscogsToken(apiToken);
-    console.log('New Discogs API token set from the UI');
+    logger.log('New Discogs API token set from the UI');
   }
   
   try {
@@ -95,15 +106,15 @@ app.post('/search', async (req, res) => {
         });
       })
       .catch((error) => {
-        console.error('Error:', error.message);
-        io.emit('results', { 
-          success: false, 
+        logger.error('Error:', error.message);
+        io.emit('results', {
+          success: false,
           error: `Error fetching collection: ${error.message}`,
           username
         });
       });
   } catch (error) {
-    console.error('Error:', error.message);
+    logger.error('Error:', error.message);
     res.render('index', { 
       results: null, 
       username, 
@@ -120,17 +131,17 @@ app.post('/set-token', (req, res) => {
   if (!apiToken) {
     localTokenCopy = '';
     discogsClient.setDiscogsToken('');
-    console.log('Discogs API token cleared');
+    logger.log('Discogs API token cleared');
     return res.redirect('/');
   }
-  
+
   localTokenCopy = apiToken;
   discogsClient.setDiscogsToken(apiToken);
-  console.log('New Discogs API token set');
+  logger.log('New Discogs API token set');
   
   res.redirect('/');
 });
 
 server.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  logger.log(`Server running at http://localhost:${PORT}`);
 });

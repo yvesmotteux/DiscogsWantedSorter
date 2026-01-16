@@ -301,3 +301,43 @@ document.addEventListener('DOMContentLoaded', function() {
     
     updateSortingIndicators();
 });
+
+// Debug mode toggle handler
+document.addEventListener('DOMContentLoaded', function() {
+    const debugToggle = document.getElementById('debugToggle');
+    const debugStatus = document.getElementById('debugStatus');
+    const debugStatusText = document.getElementById('debugStatusText');
+
+    if (debugToggle) {
+        debugToggle.addEventListener('change', function() {
+            const enabled = this.checked;
+            socket.emit('toggleDebug', enabled);
+
+            if (enabled) {
+                debugStatusText.textContent = 'Debug logging enabled. Log file is being created...';
+                debugStatus.style.display = 'block';
+            } else {
+                debugStatusText.textContent = 'Debug logging disabled.';
+                setTimeout(() => {
+                    debugStatus.style.display = 'none';
+                }, 2000);
+            }
+        });
+    }
+});
+
+// Listen for debug status updates from server
+socket.on('debugStatus', function(data) {
+    const debugStatusText = document.getElementById('debugStatusText');
+    const debugStatus = document.getElementById('debugStatus');
+
+    if (data.enabled && data.logFile) {
+        debugStatusText.textContent = `Debug logging active. Log file: ${data.logFile}`;
+        debugStatus.style.display = 'block';
+    } else if (!data.enabled) {
+        debugStatusText.textContent = 'Debug logging disabled.';
+        setTimeout(() => {
+            debugStatus.style.display = 'none';
+        }, 2000);
+    }
+});

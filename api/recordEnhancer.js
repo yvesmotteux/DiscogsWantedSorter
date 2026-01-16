@@ -1,6 +1,7 @@
 const requestManager = require('./requestManager');
 const progressEmitter = require('../utils/progressEmitter');
 const config = require('./config');
+const logger = require('../utils/logger');
 
 async function enhanceRecord(record, index, total) {
   try {
@@ -30,7 +31,7 @@ async function enhanceRecord(record, index, total) {
         record.currency = config.getCurrencySymbol(config.DEFAULT_CURRENCY);
       }
     } catch (priceError) {
-      console.log(`Couldn't get price data for ${record.title}: ${priceError.message}`);
+      logger.log(`Couldn't get price data for ${record.title}: ${priceError.message}`);
     }
 
     record.year = releaseData.year || 'Unknown';
@@ -53,7 +54,7 @@ async function enhanceRecord(record, index, total) {
     
     return record;
   } catch (detailError) {
-    console.log(`Error getting details for ${record.title}: ${detailError.message}`);
+    logger.log(`Error getting details for ${record.title}: ${detailError.message}`);
     
     progressEmitter.emit('progress', {
       type: 'enhancement',

@@ -3,6 +3,7 @@ const requestManager = require('./requestManager');
 const recordProcessor = require('./recordProcessor');
 const recordEnhancer = require('./recordEnhancer');
 const progressEmitter = require('../utils/progressEmitter');
+const logger = require('../utils/logger');
 
 async function getUserCollection(username) {
   if (!config.getDiscogsToken()) {
@@ -17,7 +18,7 @@ async function getUserCollection(username) {
       total: 0
     });
     
-    console.log(`Using Discogs API to fetch collection for ${username}`);
+    logger.log(`Using Discogs API to fetch collection for ${username}`);
     
     const url = `https://api.discogs.com/users/${username}/collection/folders/0/releases`;
     const response = await requestManager.makeAPIRequest(url, {
@@ -31,7 +32,7 @@ async function getUserCollection(username) {
     const totalItems = data.pagination.items;
     const totalPages = data.pagination.pages;
     
-    console.log(`API reports ${totalItems} items in ${totalPages} pages`);
+    logger.log(`API reports ${totalItems} items in ${totalPages} pages`);
     
     if (totalItems === 0) {
       progressEmitter.emit('progress', {
@@ -73,7 +74,7 @@ async function getUserCollection(username) {
           });
           
           if (page % 3 === 0 || page === totalPages) {
-            console.log(`Fetched page ${page}/${totalPages} with ${pageRecords.length} records via API`);
+            logger.log(`Fetched page ${page}/${totalPages} with ${pageRecords.length} records via API`);
           }
         })
       );
@@ -106,7 +107,7 @@ async function getUserCollection(username) {
     
     return allRecords;
   } catch (error) {
-    console.error('Error using Discogs API:', error.message);
+    logger.error('Error using Discogs API:', error.message);
     
     progressEmitter.emit('progress', {
       type: 'error',
