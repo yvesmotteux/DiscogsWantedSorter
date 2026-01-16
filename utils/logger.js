@@ -93,10 +93,18 @@ function getLogFilePath() {
     return currentLogFile;
 }
 
+/**
+ * Check if debug mode is currently enabled
+ */
+function isDebugEnabled() {
+    return debugMode;
+}
+
 module.exports = {
     log,
     error,
     enableDebugMode,
     disableDebugMode,
-    getLogFilePath
+    getLogFilePath,
+    isDebugEnabled
 };

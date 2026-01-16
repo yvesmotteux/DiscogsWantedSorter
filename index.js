@@ -23,6 +23,12 @@ if (localTokenCopy) {
 io.on('connection', (socket) => {
   logger.log('Client connected for progress updates');
 
+  // Send current debug state to new connection
+  socket.emit('debugStatus', {
+    enabled: logger.isDebugEnabled(),
+    logFile: logger.getLogFilePath()
+  });
+
   socket.on('disconnect', () => {
     logger.log('Client disconnected');
   });
