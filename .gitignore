@@ -6,3 +6,6 @@ node_modules/
 .vscode
 *.swp
 *.swo
+
+# Logs
+logs

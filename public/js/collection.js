@@ -301,3 +301,90 @@ document.addEventListener('DOMContentLoaded', function() {
     
     updateSortingIndicators();
 });
+
+// Debug panel collapse/expand handler
+document.addEventListener('DOMContentLoaded', function() {
+    const debugPanelToggle = document.getElementById('debugPanelToggle');
+    const debugPanelContent = document.getElementById('debugPanelContent');
+    const debugPanel = document.getElementById('debugPanel');
+    const debugPanelTitle = document.getElementById('debugPanelTitle');
+    const debugPanelHeader = document.getElementById('debugPanelHeader');
+
+    if (debugPanelToggle && debugPanelContent && debugPanel && debugPanelTitle && debugPanelHeader) {
+        debugPanelToggle.addEventListener('click', function() {
+            const isCollapsed = debugPanelContent.style.display === 'none';
+
+            if (isCollapsed) {
+                // Expand
+                debugPanelContent.style.display = 'block';
+                debugPanel.style.width = '280px';
+                debugPanelHeader.style.borderBottom = '1px solid #ddd';
+                debugPanelHeader.style.paddingBottom = '8px';
+                debugPanelHeader.style.marginBottom = '12px';
+                debugPanelHeader.style.paddingRight = '30px';
+                debugPanelHeader.style.paddingTop = '0';
+                debugPanelHeader.style.textAlign = 'left';
+                debugPanelTitle.textContent = 'Debug Mode';
+                debugPanelToggle.textContent = '▼';
+                debugPanelToggle.title = 'Collapse panel';
+            } else {
+                // Collapse
+                debugPanelContent.style.display = 'none';
+                debugPanel.style.width = '60px';
+                debugPanelHeader.style.borderBottom = 'none';
+                debugPanelHeader.style.paddingBottom = '0';
+                debugPanelHeader.style.marginBottom = '0';
+                debugPanelHeader.style.paddingRight = '0';
+                debugPanelHeader.style.paddingTop = '30px';
+                debugPanelHeader.style.textAlign = 'center';
+                debugPanelTitle.textContent = 'Debug';
+                debugPanelToggle.textContent = '◀';
+                debugPanelToggle.title = 'Expand panel';
+            }
+        });
+    }
+});
+
+// Debug mode toggle handler
+document.addEventListener('DOMContentLoaded', function() {
+    const debugToggle = document.getElementById('debugToggle');
+    const debugStatus = document.getElementById('debugStatus');
+    const debugStatusText = document.getElementById('debugStatusText');
+
+    if (debugToggle) {
+        debugToggle.addEventListener('change', function() {
+            const enabled = this.checked;
+            socket.emit('toggleDebug', enabled);
+
+            if (enabled) {
+                debugStatusText.textContent = 'Debug logging enabled. Log file is being created...';
+                debugStatus.style.display = 'block';
+            } else {
+                // Just hide immediately when disabled
+                debugStatus.style.display = 'none';
+            }
+        });
+    }
+});
+
+// Listen for debug status updates from server
+socket.on('debugStatus', function(data) {
+    const debugToggle = document.getElementById('debugToggle');
+    const debugStatusText = document.getElementById('debugStatusText');
+    const debugStatus = document.getElementById('debugStatus');
+
+    if (data.enabled && data.logFile) {
+        // Update checkbox to match server state
+        if (debugToggle) debugToggle.checked = true;
+
+        // Show log file info
+        debugStatusText.textContent = `Debug logging active. Log file: ${data.logFile}`;
+        debugStatus.style.display = 'block';
+    } else if (!data.enabled) {
+        // Update checkbox to match server state
+        if (debugToggle) debugToggle.checked = false;
+
+        // Just hide the status box immediately, no message needed
+        debugStatus.style.display = 'none';
+    }
+});

@@ -1,14 +1,17 @@
 <!-- API Token Section Partial -->
 <div class="api-token-section">
-    <h3>
-        Discogs API Token 
+    <h3 style="cursor: pointer; user-select: none;" onclick="toggleTokenSection()">
+        Discogs API Token
         <span class="token-status <%= apiTokenStatus === 'active' ? 'active' : 'inactive' %>">
             <%= apiTokenStatus === 'active' ? 'Token Active' : 'No Token' %>
         </span>
+        <% if (apiTokenStatus !== 'active') { %>
         <span class="required-badge">Required</span>
+        <% } %>
+        <span id="tokenCollapseIcon" style="float: right; font-size: 0.8em;">▼</span>
     </h3>
-    
-    <div class="api-instructions">
+
+    <div class="api-instructions" id="tokenInstructions">
         <p>To use this application, you need a Discogs API token:</p>
         <ol>
             <li>Create a <a href="https://www.discogs.com/users/create" target="_blank">Discogs account</a> if you don't have one</li>
@@ -22,3 +25,35 @@
         </form>
     </div>
 </div>
+
+<script>
+function toggleTokenSection() {
+    const instructions = document.getElementById('tokenInstructions');
+    const icon = document.getElementById('tokenCollapseIcon');
+
+    if (instructions.style.display === 'none') {
+        instructions.style.display = 'block';
+        icon.textContent = '▼';
+        localStorage.setItem('tokenSectionCollapsed', 'false');
+    } else {
+        instructions.style.display = 'none';
+        icon.textContent = '▶';
+        localStorage.setItem('tokenSectionCollapsed', 'true');
+    }
+}
+
+// Auto-collapse if token is active
+document.addEventListener('DOMContentLoaded', function() {
+    const tokenStatus = '<%= apiTokenStatus %>';
+    const wasCollapsed = localStorage.getItem('tokenSectionCollapsed') === 'true';
+
+    if (tokenStatus === 'active' || wasCollapsed) {
+        const instructions = document.getElementById('tokenInstructions');
+        const icon = document.getElementById('tokenCollapseIcon');
+        if (instructions && icon) {
+            instructions.style.display = 'none';
+            icon.textContent = '▶';
+        }
+    }
+});
+</script>

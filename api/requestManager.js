@@ -1,13 +1,12 @@
 const axios = require('axios');
 const config = require('./config');
-const progressEmitter = require('../utils/progressEmitter');
+const logger = require('../utils/logger');
 
 const requestQueue = [];
 let isProcessingQueue = false;
 let lastRequestTime = Date.now();
 
 async function makeAPIRequest(url, options = {}) {
-  const MAX_RETRIES = 3;
   
   return new Promise((resolve, reject) => {
     requestQueue.push({
@@ -41,7 +40,7 @@ async function processRequestQueue() {
     
     if (requestsInCurrentMinute >= config.MAX_SAFE_REQUESTS_PER_MINUTE) {
       const timeToNextMinute = 60000 - (now - minuteStartTime) + 50; // Small buffer
-      console.log(`Approaching rate limit (${requestsInCurrentMinute}/${config.MAX_SAFE_REQUESTS_PER_MINUTE}). Waiting ${timeToNextMinute}ms for next minute.`);
+      logger.log(`Approaching rate limit (${requestsInCurrentMinute}/${config.MAX_SAFE_REQUESTS_PER_MINUTE}). Waiting ${timeToNextMinute}ms for next minute.`);
       await new Promise(resolve => setTimeout(resolve, timeToNextMinute));
       
       requestsInCurrentMinute = 0;
@@ -73,19 +72,19 @@ async function processRequestQueue() {
       request.resolve(response);
     } catch (error) {
       if (error.response && error.response.status === 429) {
-        console.log('Rate limit exceeded (429). Adding request back to queue and pausing.');
+        logger.log('Rate limit exceeded (429). Adding request back to queue and pausing.');
         requestQueue.unshift(request);
         await new Promise(resolve => setTimeout(resolve, 10000));
-      } else if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || 
+      } else if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' ||
                 (error.response && (error.response.status === 500 || error.response.status === 503))) {
         if (request.retries < 3) {
           request.retries++;
-          console.log(`Request failed with ${error.message}. Retrying (${request.retries}/3)...`);
+          logger.log(`Request failed with ${error.message}. Retrying (${request.retries}/3)...`);
           setTimeout(() => {
             requestQueue.unshift(request);
           }, request.retries * 2000); // Wait 2s, 4s, 6s between retries
         } else {
-          console.log(`Request failed after 3 retries: ${error.message}`);
+          logger.log(`Request failed after 3 retries: ${error.message}`);
           request.reject(error);
         }
       } else {
