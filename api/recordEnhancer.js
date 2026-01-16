@@ -4,11 +4,12 @@ const config = require('./config');
 const logger = require('../utils/logger');
 
 async function enhanceRecord(record, index, total) {
+  // Try to fetch release details (independent)
   try {
     const releaseUrl = `https://api.discogs.com/releases/${record.id}?curr_abbr=${config.DEFAULT_CURRENCY}`;
-    const releaseResponse = await requestManager.makeAPIRequest(releaseUrl);
+    const releaseResponse = await requestManager.makeAPIRequest(releaseUrl, {}, { recordId: record.id });
     const releaseData = releaseResponse.data;
-    
+
     record.haveCount = releaseData.community?.have || 0;
     record.wantCount = releaseData.community?.want || 0;
     record.numForSale = releaseData.num_for_sale || 0;
@@ -22,49 +23,43 @@ async function enhanceRecord(record, index, total) {
       }
     }
 
-    try {
-      const priceSuggestionUrl = `https://api.discogs.com/marketplace/price_suggestions/${record.id}`;
-      const priceResponse = await requestManager.makeAPIRequest(priceSuggestionUrl);
-
-      if (priceResponse.data && priceResponse.data[config.DEFAULT_CONDITION]) {
-        record.medianPrice = priceResponse.data[config.DEFAULT_CONDITION].value.toFixed(2);
-        record.currency = config.getCurrencySymbol(config.DEFAULT_CURRENCY);
-      }
-    } catch (priceError) {
-      logger.log(`Couldn't get price data for ${record.title}: ${priceError.message}`);
-    }
-
     record.year = releaseData.year || 'Unknown';
-    record.format = releaseData.formats ? 
-      releaseData.formats.map(f => f.name).join(', ') : 
+    record.format = releaseData.formats ?
+      releaseData.formats.map(f => f.name).join(', ') :
       'Unknown';
-    
-    progressEmitter.emit('progress', {
-      type: 'enhancement',
-      message: 'Enhancing record details...',
-      current: index + 1,
-      total: total
-    });
-    
-    progressEmitter.emit('recordEnhanced', {
-      record,
-      index: index,
-      total: total
-    });
-    
-    return record;
-  } catch (detailError) {
-    logger.log(`Error getting details for ${record.title}: ${detailError.message}`);
-    
-    progressEmitter.emit('progress', {
-      type: 'enhancement',
-      message: 'Enhancing record details...',
-      current: index + 1,
-      total: total
-    });
-    
-    return record;
+  } catch (releaseError) {
+    const statusCode = releaseError.response?.status || 'N/A';
+    logger.log(`Failed to get release details for ${record.title} (ID: ${record.id}, Status: ${statusCode}): ${releaseError.message}`);
   }
+
+  // Try to fetch price data (independent)
+  try {
+    const priceSuggestionUrl = `https://api.discogs.com/marketplace/price_suggestions/${record.id}`;
+    const priceResponse = await requestManager.makeAPIRequest(priceSuggestionUrl, {}, { recordId: record.id });
+
+    if (priceResponse.data && priceResponse.data[config.DEFAULT_CONDITION]) {
+      record.medianPrice = priceResponse.data[config.DEFAULT_CONDITION].value.toFixed(2);
+      record.currency = config.getCurrencySymbol(config.DEFAULT_CURRENCY);
+    }
+  } catch (priceError) {
+    const statusCode = priceError.response?.status || 'N/A';
+    logger.log(`Failed to get price data for ${record.title} (ID: ${record.id}, Status: ${statusCode}): ${priceError.message}`);
+  }
+
+  progressEmitter.emit('progress', {
+    type: 'enhancement',
+    message: 'Enhancing record details...',
+    current: index + 1,
+    total: total
+  });
+
+  progressEmitter.emit('recordEnhanced', {
+    record,
+    index: index,
+    total: total
+  });
+
+  return record;
 }
 
 module.exports = {
