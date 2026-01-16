@@ -1,13 +1,11 @@
 const axios = require('axios');
 const config = require('./config');
-const progressEmitter = require('../utils/progressEmitter');
 
 const requestQueue = [];
 let isProcessingQueue = false;
 let lastRequestTime = Date.now();
 
 async function makeAPIRequest(url, options = {}) {
-  const MAX_RETRIES = 3;
   
   return new Promise((resolve, reject) => {
     requestQueue.push({

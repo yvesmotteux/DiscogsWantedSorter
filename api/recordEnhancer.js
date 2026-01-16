@@ -11,33 +11,26 @@ async function enhanceRecord(record, index, total) {
     record.haveCount = releaseData.community?.have || 0;
     record.wantCount = releaseData.community?.want || 0;
     record.numForSale = releaseData.num_for_sale || 0;
-    
-    if (releaseData.lowest_price) {
-      record.medianPrice = releaseData.lowest_price.toFixed(2);
-      record.currency = config.getCurrencySymbol(config.DEFAULT_CURRENCY);
-    }
-    
+
     if (releaseData.images && releaseData.images.length > 0) {
       const primaryImage = releaseData.images.find(img => img.type === 'primary') || releaseData.images[0];
       record.fullImageUrl = primaryImage.uri;
-      
+
       if (primaryImage.uri150) {
         record.thumbnailUrl = primaryImage.uri150;
       }
     }
-    
-    if (!record.medianPrice || record.medianPrice === '0.00' || record.medianPrice === 'Unknown') {
-      try {
-        const priceSuggestionUrl = `https://api.discogs.com/marketplace/price_suggestions/${record.id}`;
-        const priceResponse = await requestManager.makeAPIRequest(priceSuggestionUrl);
-        
-        if (priceResponse.data && priceResponse.data[config.DEFAULT_CONDITION]) {
-          record.medianPrice = priceResponse.data[config.DEFAULT_CONDITION].value.toFixed(2);
-          record.currency = config.getCurrencySymbol(config.DEFAULT_CURRENCY);
-        }
-      } catch (priceError) {
-        console.log(`Couldn't get price data for ${record.title}: ${priceError.message}`);
+
+    try {
+      const priceSuggestionUrl = `https://api.discogs.com/marketplace/price_suggestions/${record.id}`;
+      const priceResponse = await requestManager.makeAPIRequest(priceSuggestionUrl);
+
+      if (priceResponse.data && priceResponse.data[config.DEFAULT_CONDITION]) {
+        record.medianPrice = priceResponse.data[config.DEFAULT_CONDITION].value.toFixed(2);
+        record.currency = config.getCurrencySymbol(config.DEFAULT_CURRENCY);
       }
+    } catch (priceError) {
+      console.log(`Couldn't get price data for ${record.title}: ${priceError.message}`);
     }
 
     record.year = releaseData.year || 'Unknown';
