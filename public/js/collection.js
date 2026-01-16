@@ -328,13 +328,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Listen for debug status updates from server
 socket.on('debugStatus', function(data) {
+    const debugToggle = document.getElementById('debugToggle');
     const debugStatusText = document.getElementById('debugStatusText');
     const debugStatus = document.getElementById('debugStatus');
 
     if (data.enabled && data.logFile) {
+        if (debugToggle) debugToggle.checked = true;
         debugStatusText.textContent = `Debug logging active. Log file: ${data.logFile}`;
         debugStatus.style.display = 'block';
     } else if (!data.enabled) {
+        if (debugToggle) debugToggle.checked = false;
         debugStatusText.textContent = 'Debug logging disabled.';
         setTimeout(() => {
             debugStatus.style.display = 'none';
