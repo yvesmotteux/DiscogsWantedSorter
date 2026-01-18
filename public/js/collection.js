@@ -13,6 +13,11 @@ let currentRecords = [];
 let currentSortColumn = 'wantCount';
 let currentSortDirection = 'desc';
 
+// Total price tracking
+let totalPrice = 0;
+let countedRecords = 0;
+let currentCurrency = '€';
+
 function escapeHTML(str) {
     if (!str) return '';
     return str
@@ -21,6 +26,100 @@ function escapeHTML(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+/**
+ * Parse price string and return numeric value
+ * Handles "Unknown" values and invalid prices
+ */
+function parsePrice(priceString) {
+    if (!priceString || priceString === 'Unknown' || priceString === 'N/A') {
+        return 0;
+    }
+
+    // Remove currency symbols and parse
+    const numericValue = parseFloat(String(priceString).replace(/[^0-9.-]+/g, ''));
+    return isNaN(numericValue) ? 0 : numericValue;
+}
+
+/**
+ * Update the total price display with animation
+ */
+function updateTotalDisplay(newTotal, count, currency) {
+    const totalValueElement = document.getElementById('total-price-value');
+    const totalCountElement = document.getElementById('total-count');
+
+    if (!totalValueElement || !totalCountElement) return;
+
+    // Get current displayed value
+    const currentDisplayed = parsePrice(totalValueElement.textContent);
+
+    // Animate the value change
+    animateValue(totalValueElement, currentDisplayed, newTotal, currency, 300);
+
+    // Update count
+    totalCountElement.textContent = `(${count} ${count === 1 ? 'item' : 'items'})`;
+
+    // Add pulse animation class
+    totalValueElement.classList.remove('pulse');
+    void totalValueElement.offsetWidth; // Trigger reflow
+    totalValueElement.classList.add('pulse');
+
+    // Remove pulse class after animation
+    setTimeout(() => {
+        totalValueElement.classList.remove('pulse');
+    }, 400);
+}
+
+/**
+ * Animate value change with smooth counting effect
+ * Uses requestAnimationFrame for smooth animation
+ */
+function animateValue(element, start, end, currency, duration) {
+    const startTime = performance.now();
+
+    function update(currentTime) {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Cubic ease-out easing
+        const easeProgress = 1 - Math.pow(1 - progress, 3);
+
+        const current = start + (end - start) * easeProgress;
+        element.textContent = `${currency}${current.toFixed(2)}`;
+
+        if (progress < 1) {
+            requestAnimationFrame(update);
+        } else {
+            element.textContent = `${currency}${end.toFixed(2)}`;
+        }
+    }
+
+    requestAnimationFrame(update);
+}
+
+/**
+ * Recalculate total price from all current records
+ */
+function recalculateTotal() {
+    totalPrice = 0;
+    countedRecords = 0;
+    currentCurrency = '€';
+
+    currentRecords.forEach(record => {
+        const price = parsePrice(record.medianPrice);
+        if (price > 0) {
+            totalPrice += price;
+            countedRecords++;
+
+            // Set currency from first valid record
+            if (countedRecords === 1 && record.currency) {
+                currentCurrency = record.currency;
+            }
+        }
+    });
+
+    updateTotalDisplay(totalPrice, countedRecords, currentCurrency);
 }
 
 socket.on('progress', function(data) {
@@ -92,18 +191,32 @@ socket.on('recordEnhanced', function(data) {
     if (currentRecords.length < 5 || currentRecords.length % 20 === 0) {
         console.log('Record enhanced:', data.record.title);
     }
-    
+
     resultsContainer.style.display = 'block';
     noResults.style.display = 'none';
-    
+
     resultsHeading.textContent = 'Records (updating in real-time)';
-    
+
     data.record.scarcityRatio = calculateScarcityRatio(data.record);
-    
+
     currentRecords.push(data.record);
-    
+
+    // Update total price for this new record
+    const price = parsePrice(data.record.medianPrice);
+    if (price > 0) {
+        totalPrice += price;
+        countedRecords++;
+
+        // Set currency from first valid record
+        if (countedRecords === 1 && data.record.currency) {
+            currentCurrency = data.record.currency;
+        }
+
+        updateTotalDisplay(totalPrice, countedRecords, currentCurrency);
+    }
+
     sortRecords();
-    
+
     renderRecords();
 });
 
@@ -217,23 +330,26 @@ function getColumnDisplayName(columnKey) {
 }
 
 socket.on('results', function(data) {
-    console.log('Results received:', data.success ? 'Success' : 'Failed', 
+    console.log('Results received:', data.success ? 'Success' : 'Failed',
                 data.results ? `(${data.results.length} records)` : '');
-    
+
     progressContainer.style.display = 'none';
-    
+
     if (data.success && data.results && data.results.length > 0) {
         resultsContainer.style.display = 'block';
         noResults.style.display = 'none';
-        
+
         resultsHeading.textContent = `Results for ${data.username}'s Collection`;
-        
+
         data.results.forEach(record => {
             record.scarcityRatio = calculateScarcityRatio(record);
         });
-        
+
         currentRecords = data.results;
-        
+
+        // Recalculate total price from all records
+        recalculateTotal();
+
         renderRecords();
     } else if (data.success) {
         resultsContainer.style.display = 'none';
@@ -252,8 +368,18 @@ function setFormHandlers() {
             progressContainer.style.display = 'block';
             resultsContainer.style.display = 'none';
             noResults.style.display = 'none';
-            
+
+            // Reset state for new search
             currentRecords = [];
+            totalPrice = 0;
+            countedRecords = 0;
+            currentCurrency = '€';
+
+            // Reset display
+            const totalValueElement = document.getElementById('total-price-value');
+            const totalCountElement = document.getElementById('total-count');
+            if (totalValueElement) totalValueElement.textContent = '€0.00';
+            if (totalCountElement) totalCountElement.textContent = '(0 items)';
         });
     }
 }

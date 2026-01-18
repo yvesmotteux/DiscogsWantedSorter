@@ -241,3 +241,82 @@ h1, h2 {
 .results-container {
     display: none;
 }
+
+/* Results header with total price display */
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.results-header h2 {
+    margin: 0;
+    flex: 1 1 auto;
+}
+
+/* Total price display styling */
+.total-price-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+}
+
+.total-label {
+    color: #ffffff;
+    font-weight: 500;
+    font-size: 0.95em;
+}
+
+.total-price-value {
+    color: #ffffff;
+    font-weight: bold;
+    font-size: 1.5em;
+    transition: all 0.3s ease;
+}
+
+.total-count {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.9em;
+    font-weight: 400;
+}
+
+/* Pulse animation for price updates */
+@keyframes pulse-highlight {
+    0% {
+        transform: scale(1);
+        color: #ffffff;
+    }
+    50% {
+        transform: scale(1.1);
+        color: #ffd700;
+    }
+    100% {
+        transform: scale(1);
+        color: #ffffff;
+    }
+}
+
+.total-price-value.pulse {
+    animation: pulse-highlight 0.4s ease-out;
+}
+
+/* Responsive design for mobile */
+@media (max-width: 768px) {
+    .results-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .total-price-display {
+        width: 100%;
+        justify-content: center;
+    }
+}
