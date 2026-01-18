@@ -6,15 +6,55 @@ const requestQueue = [];
 let isProcessingQueue = false;
 let lastRequestTime = Date.now();
 
-async function makeAPIRequest(url, options = {}) {
-  
+function isRetryableError(error) {
+  // Connection errors
+  if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' || error.code === 'ESOCKETTIMEDOUT') {
+    return true;
+  }
+
+  // All 5XX HTTP status codes
+  if (error.response && error.response.status) {
+    const status = error.response.status;
+    return status >= 500 && status < 600;
+  }
+
+  return false;
+}
+
+function isRateLimitError(error) {
+  return error.response && error.response.status === 429;
+}
+
+function getErrorContext(error) {
+  if (error.response) {
+    return {
+      status: error.response.status,
+      url: error.config?.url || 'unknown'
+    };
+  }
+  if (error.code) {
+    return {
+      code: error.code,
+      message: error.message
+    };
+  }
+  return { message: error.message };
+}
+
+function formatRecordContext(request) {
+  return request.context?.recordId ? `[Record ID: ${request.context.recordId}] ` : '';
+}
+
+async function makeAPIRequest(url, options = {}, context = {}) {
+
   return new Promise((resolve, reject) => {
     requestQueue.push({
       url,
       options,
       resolve,
       reject,
-      retries: 0
+      retries: 0,
+      context
     });
     
     if (!isProcessingQueue) {
@@ -71,23 +111,46 @@ async function processRequestQueue() {
       const response = await axios.get(request.url, requestOptions);
       request.resolve(response);
     } catch (error) {
-      if (error.response && error.response.status === 429) {
-        logger.log('Rate limit exceeded (429). Adding request back to queue and pausing.');
+      const errorContext = getErrorContext(error);
+      const recordContext = formatRecordContext(request);
+
+      // Rate limiting - special case with longer wait
+      if (isRateLimitError(error)) {
+        logger.log(`${recordContext}Rate limit exceeded (429) for ${errorContext.url}. Pausing 10s.`);
         requestQueue.unshift(request);
         await new Promise(resolve => setTimeout(resolve, 10000));
-      } else if (error.code === 'ECONNRESET' || error.code === 'ETIMEDOUT' ||
-                (error.response && (error.response.status === 500 || error.response.status === 503))) {
+      }
+      // Retryable errors (5XX, connection issues)
+      else if (isRetryableError(error)) {
         if (request.retries < 3) {
           request.retries++;
-          logger.log(`Request failed with ${error.message}. Retrying (${request.retries}/3)...`);
-          setTimeout(() => {
-            requestQueue.unshift(request);
-          }, request.retries * 2000); // Wait 2s, 4s, 6s between retries
+          const waitTime = request.retries * 2000;
+
+          if (errorContext.status) {
+            logger.log(`${recordContext}HTTP ${errorContext.status} error. Retrying (${request.retries}/3) in ${waitTime}ms...`);
+          } else {
+            logger.log(`${recordContext}Network error (${errorContext.code}). Retrying (${request.retries}/3) in ${waitTime}ms...`);
+          }
+
+          requestQueue.unshift(request);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
         } else {
-          logger.log(`Request failed after 3 retries: ${error.message}`);
+          // Max retries exceeded
+          if (errorContext.status) {
+            logger.error(`${recordContext}HTTP ${errorContext.status} error failed after 3 retries.`);
+          } else {
+            logger.error(`${recordContext}Network error (${errorContext.code}) failed after 3 retries.`);
+          }
           request.reject(error);
         }
-      } else {
+      }
+      // Non-retryable errors (4XX except 429)
+      else {
+        if (errorContext.status) {
+          logger.log(`${recordContext}Non-retryable HTTP ${errorContext.status} error. Not retrying.`);
+        } else {
+          logger.log(`${recordContext}Non-retryable error: ${errorContext.message}`);
+        }
         request.reject(error);
       }
     }
